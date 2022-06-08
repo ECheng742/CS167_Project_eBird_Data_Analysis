@@ -69,69 +69,65 @@ object BeastScala {
           birdZipDropGeom.printSchema()
           birdZipDropGeom.show()
 //          birdZipDropGeom.write.mode(SaveMode.Overwrite).parquet("eBird_ZIP")
+        case "spatialAnalysis" =>
+          // Where Task 2 (Spatial Analysis) starts
+          val keyword: String = args(0)
+
+          sparkSession.read.parquet("eBird_ZIP_1k.parquet")
+            .createOrReplaceTempView("birds")
+
+          sparkSession.sql(
+            s"""SELECT ZIPCode, SUM(OBSERVATION_COUNT) AS total
+      FROM birds
+      GROUP BY ZIPCode
+      """).createOrReplaceTempView("totalObservations")
+
+          sparkSession.sql(
+            s"""SELECT ZIPCode, SUM(OBSERVATION_COUNT) AS filtered
+      FROM birds
+      WHERE COMMON_NAME = "$keyword"
+      GROUP BY ZIPCode
+      """).createOrReplaceTempView("filteredObservations")
+
+          sparkSession.sql(
+            s"""SELECT filtered / total AS ratio, totalObservations.ZIPCode
+      FROM totalObservations, filteredObservations
+      WHERE totalObservations.ZIPCode = filteredObservations.ZIPCode
+      """).createOrReplaceTempView("ratios")
+
+          sparkContext.shapefile("tl_2018_us_zcta510.zip")
+            .toDataFrame(sparkSession)
+            .createOrReplaceTempView("zipcodes")
+
+          val result =  sparkSession.sql(
+            s"""SELECT ratios.ZIPCode, zipcodes.g, ratios.ratio
+      FROM ratios, zipcodes
+      WHERE ratios.ZIPCode = zipcodes.ZCTA5CE10
+      """)
+
+          result.toSpatialRDD.coalesce(1).saveAsShapefile("eBirdZIPCodeRatio")
+
+        case "pie-chart" =>
+
+          val startingDate: String = args(2)
+          val endingDate: String = args(3)
+          sparkSession.read.parquet(inputFile)
+            .createOrReplaceTempView("birds")
+          import org.apache.spark.sql.functions._
+          sparkSession.sql(
+            s"""
+                      SELECT COMMON_NAME, SUM(OBSERVATION_COUNT) AS count
+                      FROM birds
+                      WHERE TO_DATE(OBSERVATION_DATE, 'yyyy-MM-dd') >= TO_DATE('$startingDate', 'MM/dd/yyyy') AND
+                      TO_DATE(OBSERVATION_DATE, 'yyyy-MM-dd') <= TO_DATE('$endingDate', 'MM/dd/yyyy')
+                      GROUP BY COMMON_NAME;
+                    """)
+            .coalesce(1)
+            .write.format("csv")
+            .option("header", "true")
+            .save("eBirdObservationsTime")
 
 
-//          val tweetsByCounty: Map[String, Long] = countyTweet
-//            .map({ case (county, tweet) => (county.getAs[String]("NAME"), 1) })
-//            .countByKey()
-//          println("County\tCount")
-//          for ((county, count) <- tweetsByCounty)
-//            println(s"$county\t$count")
-//        case "convert" =>
-//          val outputFile = args(2)
-//          // TODO add a CountyID column to the tweets, parse the text into keywords, and write back as a Parquet file
-//          val tweetsDF = sparkSession.read.format("csv")
-//            .option("sep", "\t")
-//            .option("inferSchema", "true")
-//            .option("header", "true")
-//            .load(inputFile)
-//          val tweetsRDD: SpatialRDD = tweetsDF.selectExpr("*", "ST_CreatePoint(Longitude, Latitude) AS geometry").toSpatialRDD
-//          val countiesRDD: SpatialRDD = sparkContext.shapefile("tl_2018_us_county.zip")
-//          val tweetCountyRDD: RDD[(IFeature, IFeature)] = tweetsRDD.spatialJoin(countiesRDD)
-//          val tweetCounty: DataFrame = tweetCountyRDD.map({ case (tweet, county) => Feature.append(tweet, county.getAs[String]("GEOID"), "CountyID") })
-//            .toDataFrame(sparkSession)
-//          //          tweetCounty.printSchema()
-//          val convertedDF: DataFrame = tweetCounty.selectExpr("CountyID", "Longitude", "Latitude", "split(lower(text), ',') AS keywords", "Timestamp")
-//          //          convertedDF.printSchema()
-//          convertedDF.write.mode(SaveMode.Overwrite).parquet(outputFile)
-//        case "count-by-keyword" =>
-//          val keyword: String = args(2)
-//          // TODO count the number of occurrences of each keyword per county and display on the screen
-//          sparkSession.read.parquet(inputFile)
-//            .createOrReplaceTempView("tweets")
-//          println("CountyID\tCount")
-//          sparkSession.sql(
-//            s"""
-//              SELECT CountyID, count(*) AS count
-//              FROM tweets
-//              WHERE array_contains(keywords, "$keyword")
-//              GROUP BY CountyID
-//            """).foreach(row => println(s"${row.get(0)}\t${row.get(1)}"))
-//        case "choropleth-map" =>
-//          val keyword: String = args(2)
-//          val outputFile: String = args(3)
-//          // TODO write a Shapefile that contains the count of the given keyword by county
-//          sparkSession.read.parquet(inputFile)
-//            .createOrReplaceTempView("tweets")
-//          println("CountyID\tCount")
-//          sparkSession.sql(
-//            s"""
-//              SELECT CountyID, count(*) AS count
-//              FROM tweets
-//              WHERE array_contains(keywords, "$keyword")
-//              GROUP BY CountyID
-//            """).createOrReplaceTempView("keyword_counts")
-//          sparkContext.shapefile("tl_2018_us_county.zip")
-//            .toDataFrame(sparkSession)
-//            .createOrReplaceTempView("counties")
-//          sparkSession.sql(
-//            s"""
-//              SELECT CountyID, NAME, g, count
-//              FROM keyword_counts, counties
-//              WHERE CountyID = GEOID
-//            """).toSpatialRDD
-//            .coalesce(1)
-//            .saveAsShapefile(outputFile)
         case _ => validOperation = false
       }
       val t2 = System.nanoTime()
