@@ -68,12 +68,12 @@ object BeastScala {
           val birdZipDropGeom: DataFrame = birdZip.drop("geometry")
           birdZipDropGeom.printSchema()
           birdZipDropGeom.show()
-//          birdZipDropGeom.write.mode(SaveMode.Overwrite).parquet("eBird_ZIP")
+          birdZipDropGeom.write.mode(SaveMode.Overwrite).parquet("eBird_ZIP")
         case "spatialAnalysis" =>
           // Where Task 2 (Spatial Analysis) starts
-          val keyword: String = args(0)
+          val keyword: String = args(2)
 
-          sparkSession.read.parquet("eBird_ZIP_1k.parquet")
+          sparkSession.read.parquet(inputFile)
             .createOrReplaceTempView("birds")
 
           sparkSession.sql(
