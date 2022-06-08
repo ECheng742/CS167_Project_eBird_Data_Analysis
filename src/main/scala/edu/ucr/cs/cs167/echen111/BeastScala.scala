@@ -52,6 +52,7 @@ object BeastScala {
 //          convertedDF.show()
 //          convertedDF.printSchema()
           val renamedDF : DataFrame = convertedDF.withColumnRenamed("GLOBAL UNIQUE IDENTIFIER", "GLOBAL_UNIQUE_IDENTIFIER")
+            .withColumnRenamed("COMMON NAME", "COMMON_NAME")
             .withColumnRenamed("SCIENTIFIC NAME", "SCIENTIFIC_NAME")
             .withColumnRenamed("SUBSPECIES COMMON NAME", "SUBSPECIES_COMMON_NAME")
             .withColumnRenamed("OBSERVATION COUNT", "OBSERVATION_COUNT")
@@ -68,7 +69,7 @@ object BeastScala {
           val birdZipDropGeom: DataFrame = birdZip.drop("geometry")
           birdZipDropGeom.printSchema()
           birdZipDropGeom.show()
-//          birdZipDropGeom.write.mode(SaveMode.Overwrite).parquet("eBird_ZIP")
+          birdZipDropGeom.write.mode(SaveMode.Overwrite).parquet("eBird_ZIP")
 
 
 //          val tweetsByCounty: Map[String, Long] = countyTweet
