@@ -96,6 +96,21 @@
         </configuration>
       </plugin>
 
+      <!-- Add the assemble plugin with standard configuration -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>edu.ucr.cs.cs167.echen111.BeastScala</mainClass>
+            </manifest>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+      </plugin>
+
     </plugins>
   </build>
   <profiles>
