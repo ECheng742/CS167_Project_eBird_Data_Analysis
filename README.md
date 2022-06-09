@@ -3,7 +3,7 @@
 ### Edward Martens
 #### 862256447, emart260
 ### Ellie Chang
-#### SID, UID
+#### echen111, 862127995
 ### Gregory Shar
 #### 862087118, gshar005
 
