@@ -3,7 +3,7 @@
 ### Edward Martens
 #### 862256447, emart260
 ### Ellie Chang
-#### echen111, 862127995
+#### 862127995, echen111
 ### Gregory Shar
 #### 862087118, gshar005
 
