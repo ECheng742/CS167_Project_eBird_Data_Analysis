@@ -1,4 +1,4 @@
-Need to decide our question for the video here.
-1. Yes?
-2. No?
-3. Maybe so?
+In the data preparation task, which of the following did we use to introduce the geometry attribute?
+1. x and y
+2. longitude and latitude
+3. country, county, and city
